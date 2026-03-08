@@ -662,6 +662,10 @@ z-index: 199;
 ::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
 </head>
 <body>
 
@@ -756,10 +760,6 @@ z-index: 199;
 </div>
 
 <input type="file" id="globalFileInput" accept="image/*" capture="environment" multiple>
-
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 const SECTIONS = [
@@ -1363,6 +1363,9 @@ loadingDiv.innerHTML = `<div style="background:white;border-radius:12px;padding:
 const prog = document.getElementById(‘pdfprog’);
 
 try {
+if (!window.jspdf || !window.html2canvas) {
+throw new Error(‘PDF libraries not loaded’);
+}
 const { jsPDF } = window.jspdf;
 const reportEl = document.querySelector(’.report-wrap’);
 prog.style.width = ‘30%’;
@@ -1415,18 +1418,19 @@ document.body.removeChild(loadingDiv);
 }
 
 // MOBILE MENU
-document.getElementById(‘menuBtn’).onclick = () => {
-document.getElementById(‘sidebar’).classList.toggle(‘open’);
-document.getElementById(‘sidebarOverlay’).classList.toggle(‘show’);
-};
 function closeSidebar() {
 document.getElementById(‘sidebar’).classList.remove(‘open’);
 document.getElementById(‘sidebarOverlay’).classList.remove(‘show’);
 }
 
-// Init
+document.addEventListener(‘DOMContentLoaded’, function() {
+document.getElementById(‘menuBtn’).onclick = () => {
+document.getElementById(‘sidebar’).classList.toggle(‘open’);
+document.getElementById(‘sidebarOverlay’).classList.toggle(‘show’);
+};
 renderSection(‘roofing’);
 updateProgress();
+});
 </script>
 
 </body>
