@@ -371,14 +371,6 @@ var recognition = null;
 // Build nav
 var navEl = document.getElementById('sectionNav');
 
-// Drafts nav item (top of menu)
-var draftsEl = document.createElement('div');
-draftsEl.className = 'nav-item';
-draftsEl.id = 'nav-drafts';
-draftsEl.innerHTML = '<div class="nav-icon" style="background:#6b7280;">&#128203;</div><span style="flex:1;line-height:1.3">Drafts</span>';
-draftsEl.onclick = function(){ goTo('drafts'); closeSidebar(); };
-navEl.appendChild(draftsEl);
-
 // Home nav item
 var homeEl = document.createElement('div');
 homeEl.className = 'nav-item active';
@@ -395,6 +387,14 @@ SECTIONS.forEach(function(sec) {
   el.onclick = (function(id){ return function(){ goTo(id); closeSidebar(); }; })(sec.id);
   navEl.appendChild(el);
 });
+
+// Drafts nav item (bottom of menu)
+var draftsEl = document.createElement('div');
+draftsEl.className = 'nav-item';
+draftsEl.id = 'nav-drafts';
+draftsEl.innerHTML = '<div class="nav-icon" style="background:#6b7280;">&#128203;</div><span style="flex:1;line-height:1.3">Drafts</span>';
+draftsEl.onclick = function(){ goTo('drafts'); closeSidebar(); };
+navEl.appendChild(draftsEl);
 
 function goTo(secId) {
   currentSec = secId;
