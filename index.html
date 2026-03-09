@@ -195,6 +195,25 @@ input[type=file] { display: none; }
 .report-photos img { width: 100px; height: 80px; object-fit: cover; border-radius: 5px; border: 1px solid var(--border); }
 .report-footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); text-align: center; line-height: 1.8; }
 
+/* HERO CARD */
+.hero-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); text-align: center; }
+.hero-img { padding: 28px 28px 20px; background: var(--surface); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); }
+.hero-img svg { max-width: 100%; height: auto; }
+.hero-body { padding: 18px 20px 22px; }
+.hero-title { font-size: 20px; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+.hero-sub { font-size: 13px; color: var(--muted); }
+
+/* HOW TO STEPS */
+.step-item { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.step-item:last-child { border-bottom: none; padding-bottom: 0; }
+.step-item:first-child { padding-top: 0; }
+.step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--green); color: white; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-text strong { font-size: 14px; font-weight: 700; display: block; margin-bottom: 3px; }
+.step-text p { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* PRIVACY NOTICE */
+.privacy-notice { background: var(--green-pale); border: 1px solid #b8d4b8; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: var(--text); line-height: 1.5; }
+
 /* MOBILE */
 @media (max-width: 680px) {
   .sidebar { position: fixed; left: -270px; top: 60px; height: calc(100vh - 60px); z-index: 200; transition: left 0.25s; }
@@ -414,7 +433,72 @@ function goTo(secId) {
 
 function renderHome() {
   var container = document.getElementById('forms');
-  var html = '<div class="sec-header"><div class="sec-title">Property &amp; Inspection Info</div><div class="sec-sub">Enter the property details and inspection information before starting the inspection.</div></div>';
+  var html = '';
+
+  // Hero card
+  html += '<div class="hero-card">';
+  html += '<div class="hero-img">';
+  html += '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" width="560" height="220" fill="none" stroke="#222" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">';
+  // Garage (left)
+  html += '<rect x="30" y="140" width="120" height="100" />';
+  html += '<line x1="30" y1="140" x2="90" y2="80" /><line x1="150" y1="140" x2="90" y2="80" />';
+  html += '<rect x="45" y="165" width="40" height="75" /><rect x="95" y="165" width="40" height="75" />';
+  html += '<line x1="45" y1="202" x2="85" y2="202" /><line x1="95" y1="202" x2="135" y2="202" />';
+  html += '<line x1="65" y1="165" x2="65" y2="240" /><line x1="115" y1="165" x2="115" y2="240" />';
+  // Dormer on garage
+  html += '<rect x="65" y="88" width="50" height="36" />';
+  html += '<line x1="65" y1="88" x2="90" y2="68" /><line x1="115" y1="88" x2="90" y2="68" />';
+  // Main house (center)
+  html += '<rect x="155" y="120" width="200" height="120" />';
+  html += '<line x1="155" y1="120" x2="255" y2="50" /><line x1="355" y1="120" x2="255" y2="50" />';
+  // Front door
+  html += '<rect x="225" y="185" width="60" height="55" rx="30" />';
+  // Windows main
+  html += '<rect x="168" y="148" width="44" height="36" />';
+  html += '<line x1="190" y1="148" x2="190" y2="184" /><line x1="168" y1="166" x2="212" y2="166" />';
+  html += '<rect x="298" y="148" width="44" height="36" />';
+  html += '<line x1="320" y1="148" x2="320" y2="184" /><line x1="298" y1="166" x2="342" y2="166" />';
+  // Dormer center
+  html += '<rect x="225" y="68" width="60" height="40" />';
+  html += '<line x1="225" y1="68" x2="255" y2="48" /><line x1="285" y1="68" x2="255" y2="48" />';
+  html += '<line x1="255" y1="68" x2="255" y2="108" /><line x1="225" y1="88" x2="285" y2="88" />';
+  // Right wing
+  html += '<rect x="360" y="130" width="150" height="110" />';
+  html += '<line x1="360" y1="130" x2="435" y2="68" /><line x1="510" y1="130" x2="435" y2="68" />';
+  // Right wing windows
+  html += '<rect x="374" y="158" width="40" height="32" />';
+  html += '<line x1="394" y1="158" x2="394" y2="190" /><line x1="374" y1="174" x2="414" y2="174" />';
+  html += '<rect x="456" y="158" width="40" height="32" />';
+  html += '<line x1="476" y1="158" x2="476" y2="190" /><line x1="456" y1="174" x2="496" y2="174" />';
+  // Right dormer
+  html += '<rect x="408" y="82" width="54" height="36" />';
+  html += '<line x1="408" y1="82" x2="435" y2="62" /><line x1="462" y1="82" x2="435" y2="62" />';
+  html += '<line x1="435" y1="82" x2="435" y2="118" /><line x1="408" y1="100" x2="462" y2="100" />';
+  // Ground line
+  html += '<line x1="20" y1="240" x2="620" y2="240" />';
+  // Far right addition
+  html += '<rect x="510" y="155" width="95" height="85" />';
+  html += '<line x1="510" y1="155" x2="557" y2="118" /><line x1="605" y1="155" x2="557" y2="118" />';
+  html += '<rect x="530" y="178" width="34" height="28" />';
+  html += '<line x1="547" y1="178" x2="547" y2="206" /><line x1="530" y1="192" x2="564" y2="192" />';
+  html += '</svg>';
+  html += '</div>';
+  html += '<div class="hero-body"><div class="hero-title">Inspection Report Generator</div><div class="hero-sub">InterNACHI&#174; Certified &bull; Professional Field Reporting</div></div>';
+  html += '</div>';
+
+  // How to use
+  html += '<div class="info-box"><h3>HOW TO USE THIS APP</h3>';
+  html += '<div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Fill in property info</strong><p>Enter the address, your name, and inspection date on the Home screen.</p></div></div>';
+  html += '<div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Tap each inspection item</strong><p>Set the status, add voice notes or type observations, and attach photos.</p></div></div>';
+  html += '<div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Use AI Summarize</strong><p>Tap the AI button to instantly generate professional report language from your notes.</p></div></div>';
+  html += '<div class="step-item"><div class="step-num">4</div><div class="step-text"><strong>Save &amp; Export</strong><p>Use Save Draft to preserve progress, then Export PDF when the inspection is complete.</p></div></div>';
+  html += '</div>';
+
+  // Privacy notice
+  html += '<div class="privacy-notice">&#128274; <strong>Your data stays on your device.</strong> Notes, photos, and report data are never uploaded or stored anywhere outside this app.</div>';
+
+  // Property form
+  html += '<div class="sec-header"><div class="sec-title">Property &amp; Inspection Info</div><div class="sec-sub">Enter the property details and inspection information before starting the inspection.</div></div>';
   html += '<div class="info-box"><h3>Property &amp; Inspection Info</h3><div class="info-grid">';
   html += '<div class="field"><label>Property Address</label><input type="text" id="f-addr" placeholder="456 Main Street" value="' + info.address + '" oninput="info.address=this.value"></div>';
   html += '<div class="field"><label>City / State / ZIP</label><input type="text" id="f-city" placeholder="Augusta, ME 04330" value="' + info.city + '" oninput="info.city=this.value"></div>';
