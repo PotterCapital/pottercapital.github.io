@@ -46,6 +46,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 .btn-green { background: var(--green); color: white; border: 1.5px solid var(--green); }
 .btn-green:hover { background: var(--green-light); }
 .btn-ghost { background: white; color: var(--text); border: 1.5px solid var(--border); }
+.btn-danger { background: var(--red-pale); color: var(--red); border: 1.5px solid #daa090; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 6px; cursor: pointer; }
+.btn-danger:hover { background: #fce0da; }
 
 /* LAYOUT */
 .app-layout { display: flex; min-height: calc(100vh - 60px); }
@@ -146,6 +148,23 @@ input[type=file] { display: none; }
 /* NAV ROW */
 .nav-row { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
 
+/* DRAFTS MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: white; border-radius: 10px; padding: 24px; max-width: 480px; width: 90%; max-height: 78vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.22); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); padding: 0 4px; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.draft-item { padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+.draft-title { font-size: 13px; font-weight: 600; }
+.draft-meta { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.6; }
+.draft-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 10px 22px; border-radius: 6px; font-size: 13px; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
+.toast.show { opacity: 1; }
+
 /* REPORT */
 #report-view { display: none; }
 #report-view.show { display: block; }
@@ -209,12 +228,25 @@ input[type=file] { display: none; }
   </div>
   <div class="topbar-right">
     <span id="progressText" style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:500;align-self:center;">0/0</span>
-    <button class="btn btn-outline" onclick="showReport()">Preview</button>
+    <button class="btn btn-outline" onclick="saveDraft()">&#128190; Save Draft</button>
+    <button class="btn btn-outline" id="draftsBtn" onclick="showDraftsModal()">&#128203; Drafts</button>
     <button class="btn btn-white" onclick="exportPDF()">Export PDF</button>
   </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="modal-overlay" id="draftsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">&#128203; Saved Drafts</span>
+      <button class="modal-close" onclick="closeDraftsModal()" aria-label="Close">&times;</button>
+    </div>
+    <div id="draftsList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <div id="app-view">
   <div class="app-layout">
@@ -255,7 +287,7 @@ input[type=file] { display: none; }
     </div>
     <div id="report-content"></div>
     <div class="report-footer">
-      <strong>Mainely Home Inspections</strong> &bull; InterNACHI&#174; Certified &bull; 207-692-7249 &bull; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="206a454646606d41494e4553684f4d45694e53504543544f520e434f4d">[email&#160;protected]</a><br>
+      <strong>Mainely Home Inspections</strong> &bull; InterNACHI&#174; Certified &bull; 207-692-7249<br>
       Oakland, ME 04963
     </div>
   </div>
@@ -412,7 +444,7 @@ function renderSection(secId) {
     var next = SECTIONS[secIdx+1];
     navRow.innerHTML += '<button class="btn btn-green" onclick="goTo(\'' + next.id + '\')">' + next.label + ' &#8594;</button>';
   } else {
-    navRow.innerHTML += '<button class="btn btn-green" onclick="showReport()">Generate Report &#8594;</button>';
+    navRow.innerHTML += '<button class="btn btn-green" onclick="exportPDF()">Export Report &#8594;</button>';
   }
   container.appendChild(navRow);
   updateProgress();
@@ -683,6 +715,139 @@ function exportPDF() {
   setTimeout(function() { window.print(); }, 500);
 }
 
+// Draft management
+var DRAFT_PREFIX = 'mhi_draft_';
+var DRAFT_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
+
+function cleanExpiredDrafts() {
+  var keys = Object.keys(localStorage);
+  var now = Date.now();
+  keys.forEach(function(k) {
+    if (k.indexOf(DRAFT_PREFIX) === 0) {
+      try {
+        var d = JSON.parse(localStorage.getItem(k));
+        if (!d || (now - d.savedAt) > DRAFT_TTL) { localStorage.removeItem(k); }
+      } catch(e) { localStorage.removeItem(k); }
+    }
+  });
+}
+
+function saveDraft() {
+  var draftId = DRAFT_PREFIX + Date.now();
+  var draft = { id: draftId, savedAt: Date.now(), info: JSON.parse(JSON.stringify(info)), state: JSON.parse(JSON.stringify(state)) };
+  try {
+    localStorage.setItem(draftId, JSON.stringify(draft));
+    updateDraftBadge();
+    showToast('Draft saved! \u2714');
+  } catch(e) {
+    // Retry without photos to stay under storage quota
+    var stateNoPhotos = {};
+    Object.keys(draft.state).forEach(function(k) {
+      stateNoPhotos[k] = { status: draft.state[k].status, comment: draft.state[k].comment, photos: [] };
+    });
+    draft.state = stateNoPhotos;
+    try {
+      localStorage.setItem(draftId, JSON.stringify(draft));
+      updateDraftBadge();
+      showToast('Draft saved (photos excluded \u2014 storage full).');
+    } catch(e2) {
+      alert('Could not save draft: storage is full even after excluding photos. Please delete older drafts and try again.');
+    }
+  }
+}
+
+function getDrafts() {
+  var drafts = [];
+  Object.keys(localStorage).forEach(function(k) {
+    if (k.indexOf(DRAFT_PREFIX) === 0) {
+      try { var d = JSON.parse(localStorage.getItem(k)); if (d) drafts.push(d); } catch(e) {}
+    }
+  });
+  drafts.sort(function(a, b) { return b.savedAt - a.savedAt; });
+  return drafts;
+}
+
+function loadDraft(draftId) {
+  try {
+    var d = JSON.parse(localStorage.getItem(draftId));
+    if (!d || typeof d.info !== 'object' || typeof d.state !== 'object') {
+      alert('Could not load draft. It may have been deleted or expired.');
+      return;
+    }
+    info = d.info;
+    state = d.state;
+    closeDraftsModal();
+    goTo('home');
+    updateProgress();
+    SECTIONS.forEach(function(sec) {
+      sec.items.forEach(function(item) { if (state[item.id] && state[item.id].status) updateDot(item.id); });
+    });
+    showToast('Draft loaded! \u2714');
+  } catch(e) { alert('Could not load draft. It may have been deleted or expired.'); }
+}
+
+function deleteDraft(draftId) {
+  try {
+    var d = JSON.parse(localStorage.getItem(draftId));
+    var addr = (d && d.info && d.info.address) ? d.info.address + (d.info.city ? ', ' + d.info.city : '') : 'this draft';
+    if (!confirm('Delete draft for "' + addr + '"?')) return;
+  } catch(e) {
+    if (!confirm('Delete this draft?')) return;
+  }
+  localStorage.removeItem(draftId);
+  updateDraftBadge();
+  renderDraftsList();
+}
+
+function updateDraftBadge() {
+  var count = getDrafts().length;
+  var btn = document.getElementById('draftsBtn');
+  if (btn) btn.textContent = count > 0 ? '📋 Drafts (' + count + ')' : '📋 Drafts';
+}
+
+function showDraftsModal() {
+  renderDraftsList();
+  document.getElementById('draftsModal').classList.add('show');
+}
+
+function closeDraftsModal() {
+  document.getElementById('draftsModal').classList.remove('show');
+}
+
+function renderDraftsList() {
+  var drafts = getDrafts();
+  var container = document.getElementById('draftsList');
+  if (!drafts.length) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No saved drafts. Use \u201CSave Draft\u201D to save your progress.</p>';
+    return;
+  }
+  container.innerHTML = '';
+  drafts.forEach(function(d) {
+    var addr = (d.info && d.info.address ? d.info.address : 'Unknown address') + (d.info && d.info.city ? ', ' + d.info.city : '');
+    var savedDate = new Date(d.savedAt).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    var expiresDate = new Date(d.savedAt + DRAFT_TTL).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    var item = document.createElement('div');
+    item.className = 'draft-item';
+    item.innerHTML =
+      '<div class="draft-title">' + addr + '</div>' +
+      '<div class="draft-meta">Saved: ' + savedDate + '<br>Expires: ' + expiresDate + '</div>' +
+      '<div class="draft-actions">' +
+        '<button class="btn btn-green" onclick="loadDraft(\'' + d.id + '\')">Load</button>' +
+        '<button class="btn btn-danger" onclick="deleteDraft(\'' + d.id + '\')">Delete</button>' +
+      '</div>';
+    container.appendChild(item);
+  });
+}
+
+var _toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
 document.getElementById('menuBtn').onclick = function() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');
@@ -694,8 +859,10 @@ function closeSidebar() {
 
 // Init
 try {
+  cleanExpiredDrafts();
   goTo('home');
   updateProgress();
+  updateDraftBadge();
 } catch(e) {
   document.getElementById('forms').innerHTML = '<div style="padding:20px;color:red;font-size:14px;"><strong>JS Error:</strong> ' + e.message + '</div>';
 }
