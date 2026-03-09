@@ -230,7 +230,6 @@ input[type=file] { display: none; }
   <div class="topbar-right">
     <span id="progressText" style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:500;align-self:center;">0/0</span>
     <button class="btn btn-outline" onclick="saveDraft()">&#128190; Save Draft</button>
-    <button class="btn btn-outline" id="draftsBtn" onclick="goTo('drafts');closeSidebar()">&#128203; Drafts</button>
     <button class="btn btn-white" onclick="exportPDF()">Export PDF</button>
   </div>
 </div>
@@ -822,8 +821,6 @@ function deleteDraft(draftId) {
 
 function updateDraftBadge() {
   var count = getDrafts().length;
-  var btn = document.getElementById('draftsBtn');
-  if (btn) btn.textContent = count > 0 ? '📋 Drafts (' + count + ')' : '📋 Drafts';
   var navDrafts = document.getElementById('nav-drafts');
   if (navDrafts) {
     var badge = navDrafts.querySelector('.draft-count-badge');
