@@ -337,9 +337,18 @@ var recognition = null;
 
 // Build nav
 var navEl = document.getElementById('sectionNav');
+
+// Home nav item
+var homeEl = document.createElement('div');
+homeEl.className = 'nav-item active';
+homeEl.id = 'nav-home';
+homeEl.innerHTML = '<div class="nav-icon" style="background:#555;">&#8962;</div><span style="flex:1;line-height:1.3">Home &amp; Property Info</span>';
+homeEl.onclick = function(){ goTo('home'); closeSidebar(); };
+navEl.appendChild(homeEl);
+
 SECTIONS.forEach(function(sec) {
   var el = document.createElement('div');
-  el.className = 'nav-item' + (sec.id === 'roofing' ? ' active' : '');
+  el.className = 'nav-item';
   el.id = 'nav-' + sec.id;
   el.innerHTML = '<div class="nav-icon">' + sec.abbr + '</div><span style="flex:1;line-height:1.3">' + sec.label + '</span><div class="nav-dot" id="dot-' + sec.id + '"></div>';
   el.onclick = (function(id){ return function(){ goTo(id); closeSidebar(); }; })(sec.id);
@@ -351,10 +360,29 @@ function goTo(secId) {
   document.querySelectorAll('.nav-item').forEach(function(el) {
     el.classList.toggle('active', el.id === 'nav-' + secId);
   });
-  renderSection(secId);
+  if (secId === 'home') {
+    renderHome();
+  } else {
+    renderSection(secId);
+  }
   var ld = document.getElementById('loading');
   if (ld) ld.remove();
   window.scrollTo(0,0);
+}
+
+function renderHome() {
+  var container = document.getElementById('forms');
+  var html = '<div class="sec-header"><div class="sec-title">Property &amp; Inspection Info</div><div class="sec-sub">Enter the property details and inspection information before starting the inspection.</div></div>';
+  html += '<div class="info-box"><h3>Property &amp; Inspection Info</h3><div class="info-grid">';
+  html += '<div class="field"><label>Property Address</label><input type="text" id="f-addr" placeholder="456 Main Street" value="' + info.address + '" oninput="info.address=this.value"></div>';
+  html += '<div class="field"><label>City / State / ZIP</label><input type="text" id="f-city" placeholder="Augusta, ME 04330" value="' + info.city + '" oninput="info.city=this.value"></div>';
+  html += '<div class="field"><label>Inspector Name</label><input type="text" id="f-name" placeholder="Jeffrey Campbell" value="' + info.name + '" oninput="info.name=this.value"></div>';
+  html += '<div class="field"><label>Inspection Date</label><input type="date" id="f-date" value="' + info.date + '" oninput="info.date=this.value"></div>';
+  html += '<div class="field"><label>Building Style</label><select id="f-style" onchange="info.style=this.value"><option' + (info.style==='Single Family'?' selected':'') + '>Single Family</option><option' + (info.style==='Multi-Family'?' selected':'') + '>Multi-Family</option><option' + (info.style==='Condo'?' selected':'') + '>Condo</option><option' + (info.style==='Townhouse'?' selected':'') + '>Townhouse</option><option' + (info.style==='Commercial'?' selected':'') + '>Commercial</option></select></div>';
+  html += '<div class="field"><label>Weather</label><select id="f-weather" onchange="info.weather=this.value"><option' + (info.weather==='Clear'?' selected':'') + '>Clear</option><option' + (info.weather==='Cloudy'?' selected':'') + '>Cloudy</option><option' + (info.weather==='Rain'?' selected':'') + '>Rain</option><option' + (info.weather==='Snow'?' selected':'') + '>Snow</option><option' + (info.weather==='Frozen'?' selected':'') + '>Frozen</option></select></div>';
+  html += '</div></div>';
+  html += '<div class="nav-row"><div></div><button class="btn btn-green" onclick="goTo(\'roofing\')">Start Inspection: ' + SECTIONS[0].label + ' &#8594;</button></div>';
+  container.innerHTML = html;
 }
 
 function renderSection(secId) {
@@ -362,17 +390,6 @@ function renderSection(secId) {
   for (var i=0; i<SECTIONS.length; i++) { if (SECTIONS[i].id === secId) { sec = SECTIONS[i]; break; } }
   var container = document.getElementById('forms');
   var html = '<div class="sec-header"><div class="sec-title">' + sec.label + '</div><div class="sec-sub">Record observations for each item. Tap to expand, use voice or type.</div></div>';
-
-  if (secId === 'roofing') {
-    html += '<div class="info-box"><h3>Property &amp; Inspection Info</h3><div class="info-grid">';
-    html += '<div class="field"><label>Property Address</label><input type="text" id="f-addr" placeholder="456 Main Street" value="' + info.address + '" oninput="info.address=this.value"></div>';
-    html += '<div class="field"><label>City / State / ZIP</label><input type="text" id="f-city" placeholder="Augusta, ME 04330" value="' + info.city + '" oninput="info.city=this.value"></div>';
-    html += '<div class="field"><label>Inspector Name</label><input type="text" id="f-name" placeholder="Jeffrey Campbell" value="' + info.name + '" oninput="info.name=this.value"></div>';
-    html += '<div class="field"><label>Inspection Date</label><input type="date" id="f-date" value="' + info.date + '" oninput="info.date=this.value"></div>';
-    html += '<div class="field"><label>Building Style</label><select id="f-style" onchange="info.style=this.value"><option>Single Family</option><option>Multi-Family</option><option>Condo</option><option>Townhouse</option><option>Commercial</option></select></div>';
-    html += '<div class="field"><label>Weather</label><select id="f-weather" onchange="info.weather=this.value"><option>Clear</option><option>Cloudy</option><option>Rain</option><option>Snow</option><option>Frozen</option></select></div>';
-    html += '</div></div>';
-  }
 
   container.innerHTML = html;
 
@@ -389,7 +406,7 @@ function renderSection(secId) {
     var prev = SECTIONS[secIdx-1];
     navRow.innerHTML += '<button class="btn btn-ghost" onclick="goTo(\'' + prev.id + '\')">&#8592; ' + prev.label + '</button>';
   } else {
-    navRow.innerHTML += '<div></div>';
+    navRow.innerHTML += '<button class="btn btn-ghost" onclick="goTo(\'home\')">&#8592; Home &amp; Property Info</button>';
   }
   if (secIdx < SECTIONS.length-1) {
     var next = SECTIONS[secIdx+1];
@@ -677,7 +694,7 @@ function closeSidebar() {
 
 // Init
 try {
-  goTo('roofing');
+  goTo('home');
   updateProgress();
 } catch(e) {
   document.getElementById('forms').innerHTML = '<div style="padding:20px;color:red;font-size:14px;"><strong>JS Error:</strong> ' + e.message + '</div>';
